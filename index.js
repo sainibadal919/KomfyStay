@@ -1,20 +1,23 @@
-const express=require('express');
-const app=express();
-const mongoose=require('mongoose');
+const express = require('express');
+const mongoose = require('mongoose');
 const methodOverride = require('method-override');
-const flash = require('connect-flash');
+const moment = require('moment');
+const path = require('path');
+const app = express();
 const session = require('express-session');
 require('dotenv').config();
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
 
-mongoose.connect(process.env.DB_URI)
-.then(()=>{
-    console.log("DB Connected Successfully.");
-})
-.catch((error)=>{
-    console.log(error);
-})
+mongoose
+	.connect(process.env.DB_URI)
+	.then(() => {
+		console.log('db started');
+	})
+	.catch((error) => {
+		console.log(error);
+	});
 
-// ! Session setup
 app.use(
 	session({
 		secret: process.env.SESSION_SECRET,
@@ -22,31 +25,36 @@ app.use(
 		saveUninitialized: true,
 		cookie: {
 			httpOnly: true,
-			// secure: true,
 			maxAge: 1000 * 60 * 60 * 24 * 2
+			// secure: true
 		}
 	})
 );
 
-//!Server Setup
+const User = require('./models/user');
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-app.use(flash());
-
-app.set('view engine','ejs');
-app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
-
-//! Middlewares
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
-	res.locals.success = req.flash('success');
-	res.locals.error = req.flash('error');
-	// res.locals.currentUser = req.user;
+	res.locals.moment = moment;
 	next();
 });
 
-const hotelRoutes=require('./routes/hotels');
+const hotelRoutes = require('./routes/hotels');
+const reviewRoutes = require('./routes/reviews');
+const authRoutes = require('./routes/auth');
 app.use(hotelRoutes);
+app.use(reviewRoutes);
+app.use(authRoutes);
 
-app.listen(process.env.PORT,()=>{
-    console.log('Server is running on port 3000');
-})
+const port = process.env.PORT;
+app.listen(port, () => {
+	console.log('server started');
+});
