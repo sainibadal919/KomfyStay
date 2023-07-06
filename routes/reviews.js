@@ -53,12 +53,18 @@ router.delete('/hotels/:id/reviews/:reviewId', async (req, res) => {
 		const review = await Review.findById(req.params.reviewId);
 		const hotel = await Hotel.findById(req.params.id);
 		await Review.findByIdAndDelete(req.params.reviewId);
-		hotel.sumOfRatings -= parseInt(review.stars, 10);
+	
+		console.log(hotel.sumOfRatings,hotel.totalRatings);
+		hotel.sumOfRatings -=parseInt(review.stars, 10);
 		hotel.totalRatings--;
+		console.log(hotel.sumOfRatings,hotel.totalRatings);
 		hotel.averageRating = hotel.sumOfRatings / hotel.totalRatings;
+		console.log(hotel.averageRating);
+		console.log('Hello');
 		await hotel.save();
 		res.redirect(`/hotels/${req.params.id}`);
 	} catch (error) {
+		console.log(error);
 		res.send(error);
 	}
 });
