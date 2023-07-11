@@ -58,7 +58,13 @@ router.delete('/hotels/:id/reviews/:reviewId', async (req, res) => {
 		hotel.sumOfRatings -=parseInt(review.stars, 10);
 		hotel.totalRatings--;
 		console.log(hotel.sumOfRatings,hotel.totalRatings);
-		hotel.averageRating = hotel.sumOfRatings / hotel.totalRatings;
+		if(hotel.sumOfRatings==0 && hotel.totalRatings==0){
+			hotel.averageRating=0;
+		}
+		else{
+			hotel.averageRating = hotel.sumOfRatings / hotel.totalRatings;
+		}
+		
 		console.log(hotel.averageRating);
 		console.log('Hello');
 		await hotel.save();
